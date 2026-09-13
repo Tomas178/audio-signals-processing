@@ -1,0 +1,41 @@
+[project]
+name = "audio-signals-processing"
+version = "0.1.0"
+description = "4th Course University Module"
+readme = "README.md"
+authors = [
+    { name = "Tomas178", email = "tomaspetronis77@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "numpy>=2.5.3",
+    "pyqt6>=6.11.0",
+    "pyqtgraph>=0.14.0",
+    "scipy>=1.18.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.7",
+]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
