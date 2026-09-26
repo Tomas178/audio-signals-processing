@@ -1,15 +1,3 @@
-"""Benchmark waveform rendering for very long signals (requirement 8).
-
-Compares full render time with peak downsampling + clip-to-view (what the app
-uses) against a naive render of every sample, on the largest bundled file and on
-a synthesized multi-minute signal. Run headless as a module from ``src/1lab``:
-
-    cd src/1lab && QT_QPA_PLATFORM=offscreen uv run python -m scripts.bench_large
-
-Numbers are approximate (they depend on the machine) but show the order of
-magnitude difference the downsampling makes.
-"""
-
 from __future__ import annotations
 
 import time
@@ -22,7 +10,7 @@ from PyQt6 import QtWidgets
 from audio.audio_signal import AudioSignal
 from audio.wav_io import read_signal
 
-DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "Garsai1"
+DATA_DIR = Path.cwd() / "data" / "Garsai1"
 WIDTH, HEIGHT = 1200, 700
 
 

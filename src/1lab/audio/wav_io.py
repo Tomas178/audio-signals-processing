@@ -1,15 +1,3 @@
-"""WAV reading and segment writing via soundfile (libsndfile).
-
-soundfile decodes every PCM depth (8-bit unsigned, 16, 24, 32) and IEEE float
-into a numpy array and names the encoding (e.g. ``PCM_24``), for plain WAV,
-WAVE_FORMAT_EXTENSIBLE and RF64 (> 4 GB) files alike. The one header field it
-does not expose is ``wValidBitsPerSample`` (e.g. 24 valid bits in a 32-bit
-container), so a small RIFF walk reads it from the ``fmt `` chunk.
-
-Segments are written back with the source's container format and encoding, so
-the exported samples are bit-identical to the source.
-"""
-
 from __future__ import annotations
 
 import struct
@@ -26,7 +14,6 @@ _WAV_FORMATS = {"WAV", "WAVEX", "RF64"}
 
 
 def _valid_bits(path: Path, default: int) -> int:
-    """``wValidBitsPerSample`` of a WAVE_FORMAT_EXTENSIBLE header, else ``default``."""
     with open(path, "rb") as f:
         header = f.read(12)
         if header[:4] not in (b"RIFF", b"RF64") or header[8:12] != b"WAVE":
@@ -37,10 +24,9 @@ def _valid_bits(path: Path, default: int) -> int:
                 body = f.read(size)
                 tag = struct.unpack("<H", body[:2])[0]
                 if tag == FMT_EXTENSIBLE and len(body) >= 20:
-                    # WAVEFORMATEXTENSIBLE: wValidBitsPerSample at +18.
                     return struct.unpack("<H", body[18:20])[0] or default
                 return default
-            f.seek(size + (size & 1), 1)  # chunks are padded to an even size
+            f.seek(size + (size & 1), 1)
     return default
 
 

@@ -1,11 +1,3 @@
-"""In-memory representation of a decoded audio signal.
-
-This module is pure logic (no Qt / no I/O): it holds the samples read from a
-WAV file together with the metadata needed to display them, and exposes the
-derived views the UI needs -- notably :meth:`AudioSignal.real_amplitude`, which
-returns the samples on the true quantization scale (requirement 5).
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,13 +9,13 @@ import numpy as np
 @dataclass
 class AudioSignal:
     path: Path
-    samples: np.ndarray  # shape (n,) for mono or (n, channels) otherwise
+    samples: np.ndarray
     sample_rate: int
     n_channels: int
-    bits_per_sample: int  # container width declared in the file's fmt header
-    valid_bits: int  # real quantization depth (valid bits per sample)
-    subtype: str  # soundfile sample encoding, e.g. "PCM_24" (reused on export)
-    file_format: str  # soundfile container, e.g. "WAV" or "WAVEX" (reused on export)
+    bits_per_sample: int
+    valid_bits: int
+    subtype: str
+    file_format: str
 
     @property
     def n_frames(self) -> int:
@@ -48,16 +40,6 @@ class AudioSignal:
         return f"Amplitude ({self.valid_bits}-bit PCM)"
 
     def real_amplitude(self) -> np.ndarray:
-        """Samples expressed on the true quantization scale (requirement 5).
-
-        libsndfile left-justifies every depth into the integer type it is read
-        into (a 24-bit sample becomes an int32 shifted left by 8; an unsigned
-        8-bit sample becomes a signed int16 shifted left by 8). Shifting back
-        down by ``container_bits - valid_bits`` recovers the real integer code
-        values (24-bit lands in the +/-2**23 range instead of +/-2**31, 8-bit in
-        -128..127). The discarded low bits were zero-fill, so the shift is exact.
-        Float signals are already real and are returned unchanged.
-        """
         if self.is_float:
             return self.samples
         container_bits = self.samples.dtype.itemsize * 8
@@ -68,7 +50,6 @@ class AudioSignal:
 
     @property
     def amplitude_range(self) -> tuple[float, float]:
-        """Full-scale amplitude range for the Y axis, per quantization depth."""
         if self.is_float:
             peak = float(np.max(np.abs(self.samples))) if self.n_frames else 1.0
             peak = max(peak, 1.0)

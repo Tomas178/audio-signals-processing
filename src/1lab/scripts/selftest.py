@@ -154,13 +154,14 @@ def _check_file(path: Path) -> list[str]:
         if not np.array_equal(reread.samples, signal.samples[:end_frame]):
             errors.append("exported samples differ from source")
 
+    peak_unit = "of full scale" if signal.is_float else "levels"
     depth = f"{signal.valid_bits}-bit"
     if exp_bits is not None and exp_bits != signal.valid_bits:
         depth += f" (name says {exp_bits}-bit)"
     print(
         f"  {path.name:46s} {signal.n_channels}ch "
         f"{signal.sample_rate:>6d}Hz {depth:>16s} {signal.format_name:<10s} "
-        f"peak={peak}"
+        f"peak={peak} {peak_unit}"
     )
     return errors
 

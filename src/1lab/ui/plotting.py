@@ -1,15 +1,3 @@
-"""pyqtgraph-based waveform view.
-
-Draws one stacked, X-linked plot per channel, with the signal shown as a
-continuous-time function (requirement 4), a Y axis in real quantization units
-(requirement 5), a title carrying the file name and quality indicators
-(requirement 6), and a highlighted segment overlay (requirement 7).
-
-Peak downsampling plus clip-to-view keep rendering fast for very long signals
-(requirement 8): no more than a couple of points are drawn per screen pixel,
-whatever the length of the signal.
-"""
-
 from __future__ import annotations
 
 import numpy as np
@@ -63,7 +51,6 @@ class WaveformView(pg.GraphicsLayoutWidget):
         self._regions = []
 
     def set_signal(self, signal: AudioSignal) -> None:
-        """Display ``signal``, replacing whatever was shown before."""
         self._reset()
 
         unit = choose_time_unit(signal.duration_s)
@@ -101,12 +88,10 @@ class WaveformView(pg.GraphicsLayoutWidget):
                 plot.setLabel("bottom", f"Time ({unit.label})")
             self._plots.append(plot)
 
-        # A shared amplitude caption on the first plot's left axis area.
         if self._plots:
             self._plots[0].setTitle(signal.amplitude_label, size="9pt")
 
     def highlight_segment(self, start_s: float, end_s: float) -> None:
-        """Draw a highlighted region spanning ``[start_s, end_s]`` seconds."""
         self.clear_regions()
         if not self._plots:
             return

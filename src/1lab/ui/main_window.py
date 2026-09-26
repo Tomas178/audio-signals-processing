@@ -85,6 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         try:
             signal = read_signal(path)
+            print(signal)
         except Exception as exc:
             QtWidgets.QMessageBox.critical(self, "Cannot read file", str(exc))
             return
