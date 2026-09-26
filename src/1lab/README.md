@@ -9,7 +9,7 @@ to a new WAV file with the exact original format.
 ## Running
 
 ```bash
-make setup      # uv sync (installs numpy, scipy, PyQt6, pyqtgraph)
+make setup      # uv sync (installs numpy, soundfile, PyQt6, pyqtgraph)
 make run1       # launch the GUI  (uv run python src/1lab/main.py)
 make test1      # headless self-test over data/Garsai1 (no display needed)
 ```
@@ -23,7 +23,8 @@ Open a file with **Open .wav…**. Sample files live in `data/Garsai1/`.
 | `main.py` | Entry point. |
 | **`audio/`** | **Signal model + WAV file format (no Qt)** |
 | `audio/audio_signal.py` | `AudioSignal` dataclass: in-memory samples + metadata, `real_amplitude()`, amplitude range/label, time↔frame conversion. |
-| `audio/wav_io.py` | Manual RIFF/`fmt ` parser for authoritative metadata + `scipy.io.wavfile` for samples; byte-exact segment writer. |
+| `audio/subtype.py` | `Subtype` enum of the WAV encodings the tool reads (`PCM_U8` … `DOUBLE`), each with the numpy `dtype` it is decoded into and its `bits`. |
+| `audio/wav_io.py` | WAV reading and segment writing with `soundfile` (libsndfile); a small RIFF walk reads the valid bits of WAVE_FORMAT_EXTENSIBLE headers. |
 | **`ui/`** | **PyQt6 / pyqtgraph interface** |
 | `ui/main_window.py` | Window: file dialog, metadata info bar, segment controls, save dialog. |
 | `ui/plotting.py` | `WaveformView`: stacked X-linked per-channel plots, peak downsampling, segment highlight overlay. |
@@ -45,26 +46,34 @@ when the scripts run as modules from `src/1lab` (`python -m scripts.selftest`,
 
 1. **File dialog** — `QFileDialog.getOpenFileName` filtered to `*.wav`.
 2. **Read into memory, render from memory** — `read_signal` loads the full
-   sample array (`AudioSignal.samples`) and the raw data-chunk bytes; all
-   drawing and export work from those in-memory copies.
+   sample array (`AudioSignal.samples`); all drawing and export work from that
+   in-memory copy, and the source file is never read again.
 3. **Any quality** — verified on 1 / 2 / 6 / 8 channels, 16–96 kHz, 16-bit,
-   packed 24-bit, 24-in-32-bit and 32-bit float (see table below). scipy
-   decodes the samples; a small manual `fmt ` parser recovers the true metadata
-   that scipy hides (it reports `int32` for both 24- and 32-bit files).
+   packed 24-bit, 32-bit and 32-bit float (see table below); the self-test also
+   round-trips 8-bit unsigned, 16/24/32-bit PCM and 32/64-bit float.
+   `soundfile` (libsndfile) decodes the samples and names the encoding
+   (`PCM_U8`, `PCM_16`, `PCM_24`, `PCM_32`, `FLOAT`, `DOUBLE`) for plain WAV,
+   WAVE_FORMAT_EXTENSIBLE and RF64 (> 4 GB) files. The one field it does not
+   expose — the valid bits of an extensible header, e.g. 24 valid bits in a
+   32-bit container — is read by a small RIFF walk.
 4. **Continuous-time function, adaptive axis** — line plot; the X-axis unit is
    chosen from the duration: `< 1 s → ms`, `< 90 s → s`, `< 1 h → min`, else `h`.
 5. **Real amplitude per quantization depth** — `real_amplitude()` returns the
-   integer sample values on the true bit-depth scale (±2¹⁵, ±2²³, ±2³¹; float is
-   shown natively). scipy left-justifies packed 24-bit into `int32` (×256), so
-   the samples are shifted back down by `container_bits − valid_bits` — a packed
-   24-bit signal lands in the ±2²³ range, not ±2³¹.
+   integer sample values on the true bit-depth scale (±2⁷, ±2¹⁵, ±2²³, ±2³¹;
+   float is shown natively). libsndfile left-justifies samples into the integer
+   type they are read into (24-bit into `int32`, ×256; unsigned 8-bit into a
+   signed `int16`, ×256), so the samples are shifted back down by
+   `container_bits − valid_bits` — a 24-bit signal lands in the ±2²³ range, not
+   ±2³¹, and an 8-bit one in −128…127.
 6. **On-graph quality indicators** — the plot title and info bar show the file
    name, channel count, sample rate and bit depth.
 7. **Segment select + export** — type a start time and duration; the range is
-   highlighted on every channel. **Save segment…** writes a new WAV whose `fmt `
-   chunk is copied verbatim and whose payload is sliced from the original data
-   bytes, so the export keeps the exact format (a 24-bit source stays 24-bit,
-   float stays float).
+   highlighted on every channel. **Save segment…** writes the selected frames
+   with `soundfile`, using the source's container (WAV / WAVEX / RF64) and
+   encoding, so the export keeps the exact format (a 24-bit source stays 24-bit,
+   float stays float) and its samples are bit-identical to the source.
+   libsndfile always declares valid bits = container width, so a rare
+   24-in-32-bit source is exported as plain 32-bit with the same sample bytes.
 8. **Very long signals** — see the evaluation below.
 
 ## Sample files (`data/Garsai1/`)
@@ -112,9 +121,8 @@ during **interaction**: panning/zooming stays smooth (2–4 ms/frame ≈ 250+ fp
 regardless of duration, whereas the naive path reprocesses every sample each
 frame and drops to ~5 fps on the long signal.
 
-**Memory trade-off.** The signal is kept twice: as the numpy sample array (for
-display) and as the raw data-chunk bytes (for byte-exact export) — roughly 2× the
-data-chunk size, and more for 24-bit sources because scipy expands them to
-`int32`. For the bundled files this is tens of MB. If memory ever became the
-constraint, the raw bytes could be dropped and the export segment re-read from
-disk on demand instead.
+**Memory.** The signal is kept once, as the numpy sample array that both drawing
+and export use (24-bit sources take 4/3 of their data-chunk size because
+libsndfile widens them to `int32`). While a file is shown, the plot also holds
+the time axis (8 bytes per frame) and, for 8- and 24-bit sources, the
+down-shifted amplitude array. For the bundled files this is tens of MB.

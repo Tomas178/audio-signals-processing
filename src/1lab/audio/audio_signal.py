@@ -22,9 +22,8 @@ class AudioSignal:
     n_channels: int
     bits_per_sample: int  # container width declared in the file's fmt header
     valid_bits: int  # real quantization depth (valid bits per sample)
-    raw_data: bytes  # verbatim data-chunk bytes (for faithful export)
-    frame_size: int  # bytes per frame (nBlockAlign)
-    fmt_chunk: bytes  # verbatim fmt-chunk bytes (for faithful export)
+    subtype: str  # soundfile sample encoding, e.g. "PCM_24" (reused on export)
+    file_format: str  # soundfile container, e.g. "WAV" or "WAVEX" (reused on export)
 
     @property
     def n_frames(self) -> int:
@@ -51,11 +50,12 @@ class AudioSignal:
     def real_amplitude(self) -> np.ndarray:
         """Samples expressed on the true quantization scale (requirement 5).
 
-        scipy left-justifies sub-container bit depths into the container integer
-        type (e.g. a packed 24-bit sample becomes an int32 shifted left by 8).
-        Shifting back down by ``container_bits - valid_bits`` recovers the real
-        integer code values (24-bit lands in the +/-2**23 range instead of
-        +/-2**31). The discarded low bits were zero-fill, so the shift is exact.
+        libsndfile left-justifies every depth into the integer type it is read
+        into (a 24-bit sample becomes an int32 shifted left by 8; an unsigned
+        8-bit sample becomes a signed int16 shifted left by 8). Shifting back
+        down by ``container_bits - valid_bits`` recovers the real integer code
+        values (24-bit lands in the +/-2**23 range instead of +/-2**31, 8-bit in
+        -128..127). The discarded low bits were zero-fill, so the shift is exact.
         Float signals are already real and are returned unchanged.
         """
         if self.is_float:

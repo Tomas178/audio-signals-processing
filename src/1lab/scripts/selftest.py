@@ -7,8 +7,10 @@ Run as a module from ``src/1lab`` (or via ``make test1`` from the repo root):
 For each file in ``data/Garsai1/`` it checks that the parsed channel count and
 sample rate match the name, that :meth:`AudioSignal.real_amplitude` stays within
 the quantization range (with packed 24-bit files landing in the +/-2**23 range,
-proving the down-shift), and that exporting a 0.5 s segment round-trips with an
-identical ``fmt `` chunk and the expected frame count.
+proving the down-shift), and that exporting a 0.5 s segment round-trips with the
+same format and bit-identical samples. It also writes a half-scale sine in every
+supported encoding (8-bit unsigned up to 64-bit float) and checks that it reads
+back with the right depth, signed and on the real amplitude scale.
 """
 
 from __future__ import annotations
@@ -19,8 +21,9 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
+import soundfile as sf
 
-from audio.wav_io import parse_wav_format, read_signal, write_segment
+from audio.wav_io import read_signal, write_segment
 from utils.timescale import choose_time_unit, format_duration
 
 DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "Garsai1"
@@ -49,7 +52,40 @@ def _check_timescale() -> list[str]:
     return errors
 
 
+_ENCODINGS = {
+    "PCM_U8": 8,
+    "PCM_16": 16,
+    "PCM_24": 24,
+    "PCM_32": 32,
+    "FLOAT": 32,
+    "DOUBLE": 64,
+}
+
+
+def _check_encodings() -> list[str]:
+    """Write a half-scale sine in every supported encoding and verify that it
+    reads back with the right depth, signed and on the real amplitude scale."""
+    errors = []
+    sine = 0.5 * np.sin(np.linspace(0, 20 * np.pi, 4800))
+    with tempfile.TemporaryDirectory() as tmp:
+        for subtype, bits in _ENCODINGS.items():
+            path = Path(tmp) / f"{subtype}.wav"
+            sf.write(path, sine, 48000, subtype=subtype)
+            signal = read_signal(path)
+            full_scale = 1.0 if signal.is_float else 2 ** (bits - 1)
+            amp = signal.real_amplitude() / full_scale
+            if signal.valid_bits != bits:
+                errors.append(f"{subtype}: valid bits {signal.valid_bits} != {bits}")
+            if abs(amp.max() - 0.5) > 0.01 or abs(amp.min() + 0.5) > 0.01:
+                errors.append(
+                    f"{subtype}: amplitude [{amp.min():.3f}, {amp.max():.3f}] "
+                    "of full scale, expected +/-0.5"
+                )
+    return errors
+
+
 _CHANNELS = {"mono": 1, "stereo": 2, "5.1": 6, "7.1": 8}
+_FORMAT_FIELDS = ("file_format", "subtype", "sample_rate", "n_channels", "valid_bits")
 
 
 def _expected_from_name(name: str) -> tuple[int | None, int | None, int | None]:
@@ -108,17 +144,15 @@ def _check_file(path: Path) -> list[str]:
         frames = write_segment(dst, signal, 0, end_frame)
         if frames != end_frame:
             errors.append(f"wrote {frames} frames, expected {end_frame}")
-        out_fmt = parse_wav_format(dst)
-        if out_fmt.fmt_chunk != signal.fmt_chunk:
-            errors.append("exported fmt chunk differs from source")
-        if out_fmt.data_size != end_frame * signal.frame_size:
-            errors.append(
-                f"exported data size {out_fmt.data_size} != "
-                f"{end_frame * signal.frame_size}"
-            )
         reread = read_signal(dst)
         if reread.n_frames != end_frame:
             errors.append(f"re-read {reread.n_frames} frames, expected {end_frame}")
+        for field in _FORMAT_FIELDS:
+            got, want = getattr(reread, field), getattr(signal, field)
+            if got != want:
+                errors.append(f"exported {field} {got!r} != source {want!r}")
+        if not np.array_equal(reread.samples, signal.samples[:end_frame]):
+            errors.append("exported samples differ from source")
 
     depth = f"{signal.valid_bits}-bit"
     if exp_bits is not None and exp_bits != signal.valid_bits:
@@ -140,6 +174,9 @@ def main() -> int:
     failed = 0
     for err in _check_timescale():
         print(f"  time-axis FAIL: {err}")
+        failed += 1
+    for err in _check_encodings():
+        print(f"  encoding FAIL: {err}")
         failed += 1
     for path in files:
         try:

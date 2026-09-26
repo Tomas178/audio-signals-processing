@@ -38,9 +38,8 @@ def _synth(minutes: float, sample_rate: int = 48000) -> AudioSignal:
         n_channels=1,
         bits_per_sample=16,
         valid_bits=16,
-        raw_data=samples.tobytes(),
-        frame_size=2,
-        fmt_chunk=b"",
+        subtype="PCM_16",
+        file_format="WAV",
     )
 
 
@@ -97,12 +96,12 @@ def _pan(app: QtWidgets.QApplication, signal: AudioSignal, downsample: bool) -> 
 
 def _report(app, label: str, signal: AudioSignal) -> None:
     total_samples = signal.n_frames * signal.n_channels
-    mem_mb = (signal.samples.nbytes + len(signal.raw_data)) / 1e6
+    mem_mb = signal.samples.nbytes / 1e6
     print(f"\n{label}")
     print(
         f"  {signal.n_frames:,} frames x {signal.n_channels} ch "
         f"= {total_samples:,} samples, {signal.duration_s:.1f} s, "
-        f"~{mem_mb:.0f} MB in memory (numpy + raw bytes)"
+        f"~{mem_mb:.0f} MB of samples in memory"
     )
     down = _render(app, signal, downsample=True)
     naive = _render(app, signal, downsample=False)
