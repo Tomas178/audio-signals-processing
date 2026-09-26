@@ -1,13 +1,5 @@
-"""Adaptive time-axis unit selection for waveform display (requirement 4).
-
-The time axis of a signal is shown in the unit that best fits its duration:
-milliseconds for very short signals, then seconds, minutes and hours.
-"""
-
 from __future__ import annotations
 
-# (label, seconds-per-unit). A time in seconds is converted to the chosen unit
-# by dividing it by ``seconds_per_unit``.
 _MILLISECOND = ("ms", 1e-3)
 _SECOND = ("s", 1.0)
 _MINUTE = ("min", 60.0)

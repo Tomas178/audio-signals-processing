@@ -19,7 +19,6 @@ from pyqtgraph import LinearRegionItem, PlotItem
 from audio.audio_signal import AudioSignal
 from utils.timescale import choose_time_unit, format_duration
 
-# Common channel layouts, so multichannel files get meaningful labels.
 _CHANNEL_LAYOUTS = {
     1: ["Mono"],
     2: ["Left", "Right"],

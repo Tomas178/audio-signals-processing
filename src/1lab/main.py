@@ -1,9 +1,3 @@
-"""Entry point for Lab 1 - audio signal reading and visualization.
-
-Run with the project's virtual environment, e.g. ``uv run python src/1lab/main.py``
-(or ``make run1``).
-"""
-
 import sys
 
 from PyQt6 import QtWidgets

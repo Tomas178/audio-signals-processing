@@ -21,13 +21,6 @@ FMT_EXTENSIBLE = 0xFFFE
 
 @dataclass
 class AudioSignal:
-    """A fully in-memory audio signal plus the metadata used for display.
-
-    ``raw_data`` and ``fmt_chunk`` are the verbatim bytes of the source file's
-    ``data`` and ``fmt `` chunks; they let a segment be exported with the exact
-    original format (bit depth, channel layout, ...) without re-encoding.
-    """
-
     path: Path
     samples: np.ndarray  # shape (n,) for mono or (n, channels) otherwise
     sample_rate: int
@@ -38,8 +31,6 @@ class AudioSignal:
     raw_data: bytes  # verbatim data-chunk bytes (for faithful export)
     frame_size: int  # bytes per frame (nBlockAlign)
     fmt_chunk: bytes  # verbatim fmt-chunk bytes (for faithful export)
-
-    # -- basic derived properties -------------------------------------------
 
     @property
     def n_frames(self) -> int:
@@ -62,8 +53,6 @@ class AudioSignal:
         if self.is_float:
             return f"Amplitude (IEEE float, {self.bits_per_sample}-bit)"
         return f"Amplitude ({self.valid_bits}-bit PCM)"
-
-    # -- sample access ------------------------------------------------------
 
     def channel(self, index: int) -> np.ndarray:
         """Return the samples of a single channel."""
@@ -100,6 +89,5 @@ class AudioSignal:
         return (float(-limit), float(limit - 1))
 
     def frame_at_time(self, t_seconds: float) -> int:
-        """Frame index for a time in seconds, clamped to ``[0, n_frames]``."""
         frame = int(round(t_seconds * self.sample_rate))
         return max(0, min(frame, self.n_frames))

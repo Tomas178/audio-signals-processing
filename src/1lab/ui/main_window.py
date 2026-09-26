@@ -1,11 +1,3 @@
-"""Main application window.
-
-Ties the pieces together: a standard file-open dialog (requirement 1), reading
-the whole signal into memory (requirement 2), the metadata info bar and stacked
-waveform view (requirements 3-6), and a numeric segment selector that highlights
-the chosen range and exports it to a new WAV file (requirement 7).
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -87,8 +79,6 @@ class MainWindow(QtWidgets.QMainWindow):
         row.addStretch(1)
         row.addWidget(self._save_btn)
         return panel
-
-    # -- actions ------------------------------------------------------------
 
     def open_file(self) -> None:
         start_dir = Path.cwd() / "data" / "Garsai1"
