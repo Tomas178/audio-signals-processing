@@ -68,8 +68,8 @@ class WaveformView(pg.GraphicsLayoutWidget):
         self._reset()
         self._signal = signal
 
-        unit_label, seconds_per_unit = choose_time_unit(signal.duration_s)
-        self._unit_scale = 1.0 / seconds_per_unit
+        unit = choose_time_unit(signal.duration_s)
+        self._unit_scale = 1.0 / unit.seconds
 
         amplitude = signal.real_amplitude()
         n = signal.n_frames
@@ -100,7 +100,7 @@ class WaveformView(pg.GraphicsLayoutWidget):
                 plot.setXLink(base_plot)
 
             if ch == signal.n_channels - 1:
-                plot.setLabel("bottom", f"Time ({unit_label})")
+                plot.setLabel("bottom", f"Time ({unit.label})")
             self._plots.append(plot)
 
         # A shared amplitude caption on the first plot's left axis area.

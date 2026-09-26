@@ -32,7 +32,7 @@ def _check_timescale() -> list[str]:
     cases = {0.5: "ms", 5.0: "s", 59.0: "s", 300.0: "min", 7200.0: "h"}
     errors = []
     for duration, expected in cases.items():
-        label, _ = choose_time_unit(duration)
+        label = choose_time_unit(duration).label
         if label != expected:
             errors.append(f"choose_time_unit({duration}): {label!r} != {expected!r}")
     formats = {

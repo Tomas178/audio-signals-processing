@@ -1,24 +1,16 @@
 from __future__ import annotations
 
-_MILLISECOND = ("ms", 1e-3)
-_SECOND = ("s", 1.0)
-_MINUTE = ("min", 60.0)
-_HOUR = ("h", 3600.0)
+from utils.time_unit import TimeUnit
 
 
-def choose_time_unit(duration_s: float) -> tuple[str, float]:
-    """Pick a human-friendly time unit for a signal of ``duration_s`` seconds.
-
-    Returns ``(label, seconds_per_unit)``. Multiply a value in seconds by
-    ``1 / seconds_per_unit`` to express it in the chosen unit.
-    """
+def choose_time_unit(duration_s: float) -> TimeUnit:
     if duration_s < 1.0:
-        return _MILLISECOND
+        return TimeUnit.MILLISECOND
     elif duration_s < 90.0:
-        return _SECOND
+        return TimeUnit.SECOND
     elif duration_s < 3600.0:
-        return _MINUTE
-    return _HOUR
+        return TimeUnit.MINUTE
+    return TimeUnit.HOUR
 
 
 def format_duration(seconds: float) -> str:
