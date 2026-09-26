@@ -22,15 +22,15 @@ from pathlib import Path
 
 from scipy.io import wavfile
 
-from audio.audio_signal import FMT_EXTENSIBLE, FMT_FLOAT, FMT_PCM, AudioSignal
+from audio.audio_signal import AudioSignal
+
+FMT_EXTENSIBLE = 0xFFFE
 
 
 @dataclass
 class WavFormat:
     """Metadata parsed directly from the RIFF ``fmt `` and ``data`` chunks."""
 
-    audio_format: int  # resolved real format: FMT_PCM or FMT_FLOAT
-    raw_tag: int  # original wFormatTag (may be FMT_EXTENSIBLE)
     channels: int
     sample_rate: int
     bits_per_sample: int  # container width in the file (wBitsPerSample)
@@ -46,18 +46,10 @@ def _parse_fmt(body: bytes) -> dict:
         "<HHIIHH", body[:16]
     )
     valid_bits = bits
-    audio_format = tag
-    if tag == FMT_EXTENSIBLE and len(body) >= 26:
-        # WAVEFORMATEXTENSIBLE: wValidBitsPerSample at +18, SubFormat GUID at
-        # +24 (its first two bytes carry the real format tag).
+    if tag == FMT_EXTENSIBLE and len(body) >= 20:
+        # WAVEFORMATEXTENSIBLE: wValidBitsPerSample at +18.
         valid_bits = struct.unpack("<H", body[18:20])[0] or bits
-        audio_format = struct.unpack("<H", body[24:26])[0]
-    if audio_format not in (FMT_PCM, FMT_FLOAT):
-        # Fall back on the container type; scipy will still decode it.
-        audio_format = FMT_FLOAT if bits == 32 and tag == FMT_FLOAT else FMT_PCM
     return {
-        "raw_tag": tag,
-        "audio_format": audio_format,
         "channels": channels,
         "sample_rate": sample_rate,
         "bits_per_sample": bits,
@@ -98,8 +90,6 @@ def parse_wav_format(path: str | Path) -> WavFormat:
         fmt["channels"] * ((fmt["bits_per_sample"] + 7) // 8)
     )
     return WavFormat(
-        audio_format=fmt["audio_format"],
-        raw_tag=fmt["raw_tag"],
         channels=fmt["channels"],
         sample_rate=fmt["sample_rate"],
         bits_per_sample=fmt["bits_per_sample"],
@@ -115,19 +105,17 @@ def read_signal(path: str | Path) -> AudioSignal:
     """Read a WAV file fully into memory as an :class:`AudioSignal`."""
     path = Path(path)
     fmt = parse_wav_format(path)
-    sample_rate, samples = wavfile.read(path)
+    _, samples = wavfile.read(path)
     with open(path, "rb") as f:
         f.seek(fmt.data_offset)
         raw_data = f.read(fmt.data_size)
-    audio_format = FMT_FLOAT if samples.dtype.kind == "f" else FMT_PCM
     return AudioSignal(
         path=path,
         samples=samples,
-        sample_rate=int(sample_rate),
+        sample_rate=fmt.sample_rate,
         n_channels=fmt.channels,
         bits_per_sample=fmt.bits_per_sample,
         valid_bits=fmt.valid_bits,
-        audio_format=audio_format,
         raw_data=raw_data,
         frame_size=fmt.block_align,
         fmt_chunk=fmt.fmt_chunk,

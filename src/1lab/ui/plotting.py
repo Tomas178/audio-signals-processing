@@ -53,7 +53,6 @@ class WaveformView(pg.GraphicsLayoutWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setBackground("w")
-        self._signal: AudioSignal | None = None
         self._plots: list[PlotItem] = []
         self._regions: list[LinearRegionItem] = []
         self._unit_scale = 1.0  # multiply seconds by this to get axis units
@@ -66,7 +65,6 @@ class WaveformView(pg.GraphicsLayoutWidget):
     def set_signal(self, signal: AudioSignal) -> None:
         """Display ``signal``, replacing whatever was shown before."""
         self._reset()
-        self._signal = signal
 
         unit = choose_time_unit(signal.duration_s)
         self._unit_scale = 1.0 / unit.seconds

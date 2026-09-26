@@ -13,11 +13,6 @@ from pathlib import Path
 
 import numpy as np
 
-# WAVE format tags (wFormatTag).
-FMT_PCM = 0x0001
-FMT_FLOAT = 0x0003
-FMT_EXTENSIBLE = 0xFFFE
-
 
 @dataclass
 class AudioSignal:
@@ -27,7 +22,6 @@ class AudioSignal:
     n_channels: int
     bits_per_sample: int  # container width declared in the file's fmt header
     valid_bits: int  # real quantization depth (valid bits per sample)
-    audio_format: int  # resolved format: FMT_PCM or FMT_FLOAT
     raw_data: bytes  # verbatim data-chunk bytes (for faithful export)
     frame_size: int  # bytes per frame (nBlockAlign)
     fmt_chunk: bytes  # verbatim fmt-chunk bytes (for faithful export)
@@ -53,12 +47,6 @@ class AudioSignal:
         if self.is_float:
             return f"Amplitude (IEEE float, {self.bits_per_sample}-bit)"
         return f"Amplitude ({self.valid_bits}-bit PCM)"
-
-    def channel(self, index: int) -> np.ndarray:
-        """Return the samples of a single channel."""
-        if self.samples.ndim == 1:
-            return self.samples
-        return self.samples[:, index]
 
     def real_amplitude(self) -> np.ndarray:
         """Samples expressed on the true quantization scale (requirement 5).

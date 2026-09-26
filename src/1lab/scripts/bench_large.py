@@ -38,7 +38,6 @@ def _synth(minutes: float, sample_rate: int = 48000) -> AudioSignal:
         n_channels=1,
         bits_per_sample=16,
         valid_bits=16,
-        audio_format=1,
         raw_data=samples.tobytes(),
         frame_size=2,
         fmt_chunk=b"",

@@ -59,12 +59,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._duration.setMinimum(0.0)
         self._duration.setEnabled(False)
 
-        self._highlight_btn = QtWidgets.QPushButton("Highlight")
-        self._highlight_btn.setEnabled(False)
         self._save_btn = QtWidgets.QPushButton("Save segment...")
         self._save_btn.setEnabled(False)
 
-        self._highlight_btn.clicked.connect(self._highlight)
         self._save_btn.clicked.connect(self._save_segment)
         self._start.valueChanged.connect(self._highlight)
         self._duration.valueChanged.connect(self._highlight)
@@ -74,8 +71,6 @@ class MainWindow(QtWidgets.QMainWindow):
         row.addSpacing(12)
         row.addWidget(QtWidgets.QLabel("Duration:"))
         row.addWidget(self._duration)
-        row.addSpacing(12)
-        row.addWidget(self._highlight_btn)
         row.addStretch(1)
         row.addWidget(self._save_btn)
         return panel
@@ -94,7 +89,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         try:
             signal = read_signal(path)
-        except Exception as exc:  # noqa: BLE001 - surface any read error to the user
+        except Exception as exc:
             QtWidgets.QMessageBox.critical(self, "Cannot read file", str(exc))
             return
 
@@ -125,7 +120,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._duration.setValue(min(1.0, duration))
         self._start.blockSignals(False)
         self._duration.blockSignals(False)
-        self._highlight_btn.setEnabled(True)
         self._save_btn.setEnabled(True)
         self._highlight()
 
@@ -167,7 +161,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         try:
             frames = write_segment(dst, signal, start_frame, end_frame)
-        except Exception as exc:  # noqa: BLE001 - surface any write error
+        except Exception as exc:
             QtWidgets.QMessageBox.critical(self, "Cannot save segment", str(exc))
             return
         self.statusBar().showMessage(

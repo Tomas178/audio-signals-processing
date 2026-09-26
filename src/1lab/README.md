@@ -28,6 +28,7 @@ Open a file with **Open .wav…**. Sample files live in `data/Garsai1/`.
 | `ui/main_window.py` | Window: file dialog, metadata info bar, segment controls, save dialog. |
 | `ui/plotting.py` | `WaveformView`: stacked X-linked per-channel plots, peak downsampling, segment highlight overlay. |
 | **`utils/`** | **Small pure helpers** |
+| `utils/time_unit.py` | `TimeUnit` enum (ms / s / min / h) with a `label` and `seconds` per unit. |
 | `utils/timescale.py` | Adaptive time-axis unit (ms / s / min / h) and duration formatting. |
 | **`scripts/`** | **Runnable dev tools (not imported by the app)** |
 | `scripts/selftest.py` | Headless verification over the sample set (`make test1`). |

@@ -144,7 +144,7 @@ def main() -> int:
     for path in files:
         try:
             errors = _check_file(path)
-        except Exception as exc:  # noqa: BLE001 - report and keep going
+        except Exception as exc:
             print(f"  {path.name:46s} ERROR: {exc}")
             failed += 1
             continue
