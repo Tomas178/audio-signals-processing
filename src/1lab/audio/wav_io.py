@@ -45,13 +45,13 @@ def _valid_bits(path: Path, default: int) -> int:
 
 
 def read_signal(path: str | Path) -> AudioSignal:
-    """Read a WAV file fully into memory as an :class:`AudioSignal`."""
     path = Path(path)
     info = sf.info(path)
     if info.format not in _WAV_FORMATS:
         raise ValueError(f"Not a WAV file: {info.format_info}")
     if info.subtype not in Subtype.__members__:
         raise ValueError(f"Unsupported WAV encoding: {info.subtype_info}")
+
     subtype = Subtype[info.subtype]
     samples, sample_rate = sf.read(path, dtype=subtype.dtype)
     return AudioSignal(
@@ -69,13 +69,6 @@ def read_signal(path: str | Path) -> AudioSignal:
 def write_segment(
     dst: str | Path, signal: AudioSignal, start_frame: int, end_frame: int
 ) -> int:
-    """Write frames ``[start_frame, end_frame)`` of ``signal`` to ``dst``.
-
-    The segment is written with the source's container format and sample
-    encoding, so it keeps the exact channel count, sample rate and bit depth,
-    and its samples are bit-identical to the source. Returns the number of
-    frames written.
-    """
     start_frame = max(0, min(start_frame, signal.n_frames))
     end_frame = max(start_frame, min(end_frame, signal.n_frames))
     sf.write(

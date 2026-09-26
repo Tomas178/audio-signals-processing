@@ -34,8 +34,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(central)
         self.statusBar().showMessage("Ready")
 
-    # -- construction -------------------------------------------------------
-
     def _build_toolbar(self) -> None:
         toolbar = self.addToolBar("Main")
         toolbar.setMovable(False)
@@ -77,8 +75,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_file(self) -> None:
         start_dir = Path.cwd() / "data" / "Garsai1"
-        if not start_dir.exists():
-            start_dir = Path.cwd()
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self,
             "Open WAV file",
