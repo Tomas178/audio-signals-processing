@@ -35,8 +35,9 @@ select = [
 ]
 
 [tool.ruff.lint.isort]
-# Top-level packages under src/1lab (imported absolutely; sys.path[0] is src/1lab).
-known-first-party = ["audio", "ui", "utils", "scripts"]
+# Top-level packages of each lab folder (imported absolutely; sys.path[0] is
+# src/<n>lab).
+known-first-party = ["analysis", "audio", "ui", "utils", "scripts"]
 
 [tool.ruff.format]
 quote-style = "double"

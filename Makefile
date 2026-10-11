@@ -1,4 +1,4 @@
-.PHONY: setup run1 run2 run3 test1
+.PHONY: setup run1 run2 run3 test1 test2 signals2 report2
 
 setup:
 	uv sync
@@ -14,3 +14,12 @@ run3:
 
 test1:
 	cd src/1lab && QT_QPA_PLATFORM=offscreen uv run python -m scripts.selftest
+
+test2:
+	cd src/2lab && QT_QPA_PLATFORM=offscreen uv run python -m scripts.selftest
+
+signals2:
+	cd src/2lab && uv run python -m scripts.make_signals
+
+report2:
+	cd src/2lab && uv run python -m scripts.report
