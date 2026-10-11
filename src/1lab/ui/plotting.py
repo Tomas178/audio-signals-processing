@@ -11,7 +11,7 @@ _CHANNEL_LAYOUTS = {
     1: ["Mono"],
     2: ["Left", "Right"],
     6: ["FL", "FR", "C", "LFE", "SL", "SR"],
-    8: ["FL", "FR", "C", "LFE", "SL", "SR", "BL", "BR"],
+    8: ["FL", "FR", "C", "LFE", "BL", "BR", "SL", "SR"],
 }
 
 _WAVE_PEN = pg.mkPen((30, 90, 200), width=1)
@@ -19,7 +19,20 @@ _REGION_BRUSH = pg.mkBrush(255, 140, 0, 70)
 _REGION_PEN = pg.mkPen((230, 120, 0), width=1)
 
 
-def _channel_names(n: int) -> list[str]:
+# WAVE_FORMAT_EXTENSIBLE speaker bits; channels appear in the file in bit order.
+_SPEAKER_BITS = [
+    "FL", "FR", "C", "LFE", "BL", "BR", "FLC", "FRC", "BC",
+    "SL", "SR", "TC", "TFL", "TFC", "TFR", "TBL", "TBC", "TBR",
+]
+
+
+def _channel_names(n: int, channel_mask: int = 0) -> list[str]:
+    if channel_mask:
+        names = [
+            name for bit, name in enumerate(_SPEAKER_BITS) if channel_mask >> bit & 1
+        ]
+        names = names[:n]
+        return names + [f"Ch {i + 1}" for i in range(len(names), n)]
     if n in _CHANNEL_LAYOUTS:
         return list(_CHANNEL_LAYOUTS[n])
     return [f"Ch {i + 1}" for i in range(n)]
@@ -62,7 +75,7 @@ class WaveformView(pg.GraphicsLayoutWidget):
             np.arange(n, dtype=np.float64) / signal.sample_rate
         ) * self._unit_scale
         amp_lo, amp_hi = signal.amplitude_range
-        names = _channel_names(signal.n_channels)
+        names = _channel_names(signal.n_channels, signal.channel_mask)
 
         self.addLabel(_title(signal), row=0, col=0)
 

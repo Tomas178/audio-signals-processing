@@ -16,6 +16,7 @@ class AudioSignal:
     valid_bits: int
     subtype: str
     file_format: str
+    channel_mask: int = 0
 
     @property
     def n_frames(self) -> int:

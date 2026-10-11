@@ -85,7 +85,14 @@ def _check_encodings() -> list[str]:
 
 
 _CHANNELS = {"mono": 1, "stereo": 2, "5.1": 6, "7.1": 8}
-_FORMAT_FIELDS = ("file_format", "subtype", "sample_rate", "n_channels", "valid_bits")
+_FORMAT_FIELDS = (
+    "file_format",
+    "subtype",
+    "sample_rate",
+    "n_channels",
+    "valid_bits",
+    "channel_mask",
+)
 
 
 def _expected_from_name(name: str) -> tuple[int | None, int | None, int | None]:
