@@ -99,17 +99,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._rate.setSuffix(" Hz")
         self._period = QtWidgets.QLabel()
 
-        self._channel = QtWidgets.QComboBox()
-        self._channel.setEnabled(False)
-        self._channel.setSizeAdjustPolicy(
-            QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents
-        )
-
         self._rate.setKeyboardTracking(False)
         self._rate.valueChanged.connect(self._update_period)
         self._rate.valueChanged.connect(self._reprocess)
         self._waveform.currentIndexChanged.connect(self._reprocess)
-        self._channel.currentIndexChanged.connect(self._redraw)
         self._update_period()
 
         row.addWidget(QtWidgets.QLabel("Modulating signal:"))
@@ -118,9 +111,6 @@ class MainWindow(QtWidgets.QMainWindow):
         row.addWidget(QtWidgets.QLabel("Rate:"))
         row.addWidget(self._rate)
         row.addWidget(self._period)
-        row.addSpacing(12)
-        row.addWidget(QtWidgets.QLabel("Show channel:"))
-        row.addWidget(self._channel)
         row.addStretch(1)
         return panel
 
@@ -142,7 +132,6 @@ class MainWindow(QtWidgets.QMainWindow):
         signal = read_signal(path)
         self._player.stop()
         self._signal = signal
-        self._fill_channels(signal)
         for action in self._file_actions:
             action.setEnabled(True)
         self._reprocess()
@@ -152,23 +141,11 @@ class MainWindow(QtWidgets.QMainWindow):
             8000,
         )
 
-    def _fill_channels(self, signal: AudioSignal) -> None:
-        self._channel.blockSignals(True)
-        self._channel.clear()
-        if signal.n_channels > 1:
-            self._channel.addItem(f"Mix (mean of {signal.n_channels} channels)", None)
-            for index, name in enumerate(signal.channel_names):
-                self._channel.addItem(f"{index + 1}: {name}", index)
-        else:
-            self._channel.addItem(signal.channel_names[0], None)
-        self._channel.setEnabled(signal.n_channels > 1)
-        self._channel.blockSignals(False)
-
     def _channel_label(self) -> str:
-        channel = self._channel.currentData()
-        if channel is not None:
-            return self._signal.channel_names[channel]
-        return "Mix" if self._signal.n_channels > 1 else self._signal.channel_names[0]
+        signal = self._signal
+        if signal.n_channels > 1:
+            return f"Mix of {signal.n_channels} channels"
+        return signal.channel_names[0]
 
     def _effect_label(self) -> str:
         return f"{self._waveform.currentData().label}, {self._rate.value():.2f} Hz"
@@ -178,7 +155,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if signal is None:
             return
         if self._player.label == "processed":
-            self._player.stop()  # never keep playing a stale version
+            self._player.stop()
         self._m = modulator(
             signal.n_samples,
             signal.sample_rate,
@@ -193,9 +170,8 @@ class MainWindow(QtWidgets.QMainWindow):
         signal = self._signal
         if signal is None or self._processed is None:
             return
-        channel = self._channel.currentData()
-        original = signal.channel_samples(channel)
-        processed = self._processed.channel_samples(channel)
+        original = signal.channel_samples()
+        processed = self._processed.channel_samples()
         self._view.show_signal(signal, original, self._channel_label())
         self._view.show_effect(self._m, processed, self._effect_label())
         self._update_info(original, processed)

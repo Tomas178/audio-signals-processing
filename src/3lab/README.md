@@ -76,9 +76,8 @@ resolve because `src/3lab` is on `sys.path`.
 - **Level change.** If the signal does not depend on $m$, its power is
   multiplied by $E[m^2]$, the mean of $u^2$ over one period: 3/8 for the
   sine, 1/3 for the triangle and 1/2 for the square. The level therefore
-  changes by $10 \log_{10} E[m^2]$ dB.
-  The info bar shows the measured RMS change of the shown channel next to this
-  value.
+  changes by $10 \log_{10} E[m^2]$ dB. The info bar shows the measured RMS
+  change of the plotted signal next to this value.
 - **Playback.** Qt Multimedia (`QMediaPlayer`) plays the source file directly
   and the processed signal from a temporary WAV. It downmixes 5.1 and 7.1
   files and resamples for the output device.
@@ -98,8 +97,8 @@ resolve because `src/3lab` is on `sys.path`.
    shows time diagrams of the original signal, the
    intermediate signal $m(t)$ and the processed signal, with the envelope
    $\pm\,\text{peak} \cdot m(t)$ drawn over the last one. The three plots zoom
-   and pan together. For multi-channel files the plots show the mix or any
-   single channel, and the effect is applied to every channel.
+   and pan together. For multi-channel files the plots show the mix (the
+   mean of all channels), and the effect is applied to every channel.
 3. **Listening and saving.** **Play processed** plays the result while an
    orange cursor moves across all three plots. **Save processed…** saves it
    under a chosen name (`QFileDialog.getSaveFileName`) in the source's format.

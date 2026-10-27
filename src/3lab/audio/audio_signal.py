@@ -118,14 +118,12 @@ class AudioSignal:
 
         return replace(self, samples=samples)
 
-    def channel_samples(self, channel: int | None = None) -> np.ndarray:
-        """Real amplitude of one channel as float64; ``None`` averages all."""
+    def channel_samples(self) -> np.ndarray:
+        """Real amplitude as float64, with multiple channels averaged into one."""
         amplitude = self.real_amplitude()
         if amplitude.ndim == 1:
             return amplitude.astype(np.float64)
-        if channel is None:
-            return amplitude.mean(axis=1, dtype=np.float64)
-        return amplitude[:, channel].astype(np.float64)
+        return amplitude.mean(axis=1, dtype=np.float64)
 
     @property
     def amplitude_range(self) -> tuple[float, float]:
