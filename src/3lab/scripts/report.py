@@ -4,9 +4,9 @@ Run as a module from ``src/3lab`` (or via ``make report3`` from the repo root):
 
     cd src/3lab && uv run python -m scripts.report
 
-Unless a table says otherwise the modulating signal runs at 2 Hz with 100 %
-depth, and levels are the RMS over all channels of a recording. The last table
-sweeps the rate on recordings whose loudness changes over time.
+Unless a table says otherwise the modulating signal runs at 2 Hz, and levels
+are the RMS over all channels of a recording. The last table sweeps the rate on
+recordings whose loudness changes over time.
 """
 
 from __future__ import annotations
@@ -27,7 +27,6 @@ from effects.modulation import (
 
 DATA_DIR = Path(__file__).resolve().parents[3] / "data"
 RATE_HZ = 2.0
-DEPTHS = (0.25, 0.5, 0.75, 1.0)
 RATES_HZ = (0.5, 1.0, 2.0, 5.0, 10.0, 20.0, 40.0)
 # Recordings whose loudness changes over time, for the rate sweep.
 _UNEVEN = ("Speech#1", "Music#1", "DTMF_tones")
@@ -81,7 +80,7 @@ def _largest_step(waveform: Waveform, sample_rate: int = 44100) -> float:
 def main() -> None:
     labels = [w.label.split(" (")[0] for w in Waveform]
     _table(
-        f"Table 1. Modulating signals (100 % depth; step at {RATE_HZ:g} Hz, 44.1 kHz)",
+        f"Table 1. Modulating signals (step at {RATE_HZ:g} Hz, 44.1 kHz)",
         [
             "Modulating signal",
             "u(φ)",
@@ -95,7 +94,7 @@ def main() -> None:
                 w.label,
                 _FORMULAS[w],
                 f"{w.mean_square:.3f}",
-                f"{expected_level_db(w, 1.0):+.2f} dB",
+                f"{expected_level_db(w):+.2f} dB",
                 f"{_largest_step(w):.2g}",
                 _SIDEBANDS[w],
             ]
@@ -103,9 +102,7 @@ def main() -> None:
         ],
     )
 
-    rows = [
-        ["**Expected**", "", *(f"{expected_level_db(w, 1.0):+.2f}" for w in Waveform)]
-    ]
+    rows = [["**Expected**", "", *(f"{expected_level_db(w):+.2f}" for w in Waveform)]]
     for path in sorted(DATA_DIR.rglob("*.wav")):
         signal = read_signal(path)
         original = signal.real_amplitude()
@@ -118,18 +115,9 @@ def main() -> None:
             )
         rows.append([_name(path), str(signal.n_channels), *levels])
     _table(
-        f"Table 2. Measured RMS level change, dB ({RATE_HZ:g} Hz, 100 % depth)",
+        f"Table 2. Measured RMS level change, dB ({RATE_HZ:g} Hz)",
         ["Signal", "Channels", *labels],
         rows,
-    )
-
-    _table(
-        "Table 3. Expected level change, dB, by depth",
-        ["Modulating signal", *(f"{d:.0%}" for d in DEPTHS)],
-        [
-            [w.label, *(f"{expected_level_db(w, d):+.2f}" for d in DEPTHS)]
-            for w in Waveform
-        ],
     )
 
     rows = []
@@ -148,7 +136,7 @@ def main() -> None:
                 levels.append(f"{level:+.2f}")
             rows.append([_name(path), waveform.label, *levels])
     _table(
-        "Table 4. Measured RMS level change, dB, by rate (100 % depth)",
+        "Table 3. Measured RMS level change, dB, by rate",
         ["Signal", "Modulating signal", *(f"{r:g} Hz" for r in RATES_HZ)],
         rows,
     )

@@ -9,9 +9,7 @@ from PyQt6 import QtWidgets
 from audio.audio_signal import AudioSignal
 from audio.wav_io import read_signal, write_signal
 from effects.modulation import (
-    DEFAULT_DEPTH,
     DEFAULT_RATE_HZ,
-    DEPTH_RANGE,
     RATE_RANGE_HZ,
     Waveform,
     expected_level_db,
@@ -101,22 +99,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self._rate.setSuffix(" Hz")
         self._period = QtWidgets.QLabel()
 
-        self._depth = QtWidgets.QSpinBox()
-        self._depth.setRange(*DEPTH_RANGE)
-        self._depth.setSingleStep(10)
-        self._depth.setValue(DEFAULT_DEPTH)
-        self._depth.setSuffix(" %")
-
         self._channel = QtWidgets.QComboBox()
         self._channel.setEnabled(False)
         self._channel.setSizeAdjustPolicy(
             QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents
         )
 
+        self._rate.setKeyboardTracking(False)
         self._rate.valueChanged.connect(self._update_period)
-        for box in (self._rate, self._depth):
-            box.setKeyboardTracking(False)
-            box.valueChanged.connect(self._reprocess)
+        self._rate.valueChanged.connect(self._reprocess)
         self._waveform.currentIndexChanged.connect(self._reprocess)
         self._channel.currentIndexChanged.connect(self._redraw)
         self._update_period()
@@ -127,9 +118,6 @@ class MainWindow(QtWidgets.QMainWindow):
         row.addWidget(QtWidgets.QLabel("Rate:"))
         row.addWidget(self._rate)
         row.addWidget(self._period)
-        row.addSpacing(12)
-        row.addWidget(QtWidgets.QLabel("Depth:"))
-        row.addWidget(self._depth)
         row.addSpacing(12)
         row.addWidget(QtWidgets.QLabel("Show channel:"))
         row.addWidget(self._channel)
@@ -183,10 +171,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return "Mix" if self._signal.n_channels > 1 else self._signal.channel_names[0]
 
     def _effect_label(self) -> str:
-        return (
-            f"{self._waveform.currentData().label}, {self._rate.value():.2f} Hz, "
-            f"depth {self._depth.value()} %"
-        )
+        return f"{self._waveform.currentData().label}, {self._rate.value():.2f} Hz"
 
     def _reprocess(self) -> None:
         signal = self._signal
@@ -199,7 +184,6 @@ class MainWindow(QtWidgets.QMainWindow):
             signal.sample_rate,
             self._waveform.currentData(),
             self._rate.value(),
-            self._depth.value() / 100,
         )
         self._processed = modulate(signal, self._m)
         self._render = None
@@ -219,7 +203,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _update_info(self, original: np.ndarray, processed: np.ndarray) -> None:
         signal = self._signal
         waveform = self._waveform.currentData()
-        expected = expected_level_db(waveform, self._depth.value() / 100)
+        expected = expected_level_db(waveform)
         self._info.setText(
             f"<b>{signal.path.name}</b> &nbsp;|&nbsp; "
             f"Channels: {signal.n_channels} &nbsp;|&nbsp; "

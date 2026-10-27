@@ -9,8 +9,9 @@ $$
 $$
 
 where $m$ is a low-frequency modulating signal. Three modulating signals are
-available (sine, triangle and square), with an adjustable rate and depth. The tool plots the original signal, $m(t)$ and the processed signal,
-plays both, and saves the result in the source's format.
+available (sine, triangle and square), with an adjustable rate. The tool plots
+the original signal, $m(t)$ and the processed signal, plays both, and saves the
+result in the source's format.
 
 ## Running
 
@@ -60,9 +61,8 @@ resolve because `src/3lab` is on `sys.path`.
   | Triangle          | $\lvert 1 - 2\varphi \rvert$                |
   | Square            | $1$ for $\varphi < \tfrac12$, otherwise $0$ |
 
-- **Depth.** $m = 1 - d \, (1 - u)$, so $m$ swings between $1 - d$ and $1$. At
-  the default $d = 100\,\%$ the level goes from silence to full volume, as the
-  task asks. At $d = 0$ the signal is left unchanged.
+- **Range.** $m[k] = u(\varphi_k)$, so in every period the level goes from
+  silence ($m = 0$) to full volume ($m = 1$), as the task asks.
 - **Rate.** $f_m$ is 0.1–50 Hz (default 2 Hz). The range goes past the point
   where the level change stops sounding like "waving", so you can find that
   point.
@@ -74,8 +74,9 @@ resolve because `src/3lab` is on `sys.path`.
   source stays 24-bit, float stays float). The file you play is the file you
   save.
 - **Level change.** If the signal does not depend on $m$, its power is
-  multiplied by $E[m^2] = 1 - d + d^2 E[u^2]$ (every shape has
-  $E[u] = \tfrac12$). The level therefore changes by $10 \log_{10} E[m^2]$ dB.
+  multiplied by $E[m^2]$, the mean of $u^2$ over one period: 3/8 for the
+  sine, 1/3 for the triangle and 1/2 for the square. The level therefore
+  changes by $10 \log_{10} E[m^2]$ dB.
   The info bar shows the measured RMS change of the shown channel next to this
   value.
 - **Playback.** Qt Multimedia (`QMediaPlayer`) plays the source file directly
@@ -93,8 +94,8 @@ resolve because `src/3lab` is on `sys.path`.
    `QFileDialog.getOpenFileName` filtered to `*.wav`. The top plot shows the
    original signal, and **Play original** plays it.
 2. **(c) Modulation effect.** The settings row below the plots chooses the
-   modulating signal (sine, triangle or square), its rate and its
-   depth. The window shows time diagrams of the original signal, the
+   modulating signal (sine, triangle or square) and its rate. The window
+   shows time diagrams of the original signal, the
    intermediate signal $m(t)$ and the processed signal, with the envelope
    $\pm\,\text{peak} \cdot m(t)$ drawn over the last one. The three plots zoom
    and pan together. For multi-channel files the plots show the mix or any
@@ -108,7 +109,7 @@ resolve because `src/3lab` is on `sys.path`.
 All tables come from `make report3`. Levels are the RMS over all channels of a
 recording.
 
-#### Table 1. Modulating signals (100 % depth; step at 2 Hz, 44.1 kHz)
+#### Table 1. Modulating signals (step at 2 Hz, 44.1 kHz)
 
 | Modulating signal |        u(φ)        | E[m²] | Level change | Largest step of m per sample | Sidebands at f₀ ± n·f_m |
 | ----------------- | :----------------: | :---: | :----------: | :--------------------------: | :---------------------: |
@@ -116,7 +117,7 @@ recording.
 | Triangle          |     \|1 − 2φ\|     | 0.333 |   -4.77 dB   |           9.1e-05            |      odd n, ∝ 1/n²      |
 | Square            | 1 if φ < ½, else 0 | 0.500 |   -3.01 dB   |              1               |       odd n, ∝ 1/n      |
 
-#### Table 2. Measured RMS level change, dB (2 Hz, 100 % depth)
+#### Table 2. Measured RMS level change, dB (2 Hz)
 
 | Signal               | Channels |  Sine | Triangle | Square |
 | -------------------- | :------: | :---: | :------: | :----: |
@@ -136,15 +137,7 @@ recording.
 | White_noise_gaussian |    1     | -4.25 |  -4.76   | -3.01  |
 | White_noise_uniform  |    1     | -4.27 |  -4.78   | -2.99  |
 
-#### Table 3. Expected level change, dB, by depth
-
-| Modulating signal |  25%  |  50%  |  75%  |  100% |
-| ----------------- | :---: | :---: | :---: | :---: |
-| Sine              | -1.12 | -2.26 | -3.36 | -4.26 |
-| Triangle          | -1.13 | -2.34 | -3.59 | -4.77 |
-| Square            | -1.07 | -2.04 | -2.75 | -3.01 |
-
-#### Table 4. Measured RMS level change, dB, by rate (100 % depth)
+#### Table 3. Measured RMS level change, dB, by rate
 
 | Signal     | Modulating signal | 0.5 Hz |  1 Hz  |  2 Hz |  5 Hz | 10 Hz | 20 Hz | 40 Hz |
 | ---------- | :---------------: | :----: | :----: | :---: | :---: | :---: | :---: | :---: |
@@ -157,8 +150,8 @@ recording.
 
 ## Listening notes
 
-_Fill in after listening with **Play processed** (100 % depth unless noted).
-Try at least `Sinus_500Hz`, `Music#1` and `Speech#1`._
+_Fill in after listening with **Play processed**. Try at least
+`Sinus_500Hz`, `Music#1` and `Speech#1`._
 
 | Modulating signal | 0.5 Hz | 2 Hz | 5 Hz | 10 Hz | 20 Hz | 40 Hz |
 | ----------------- | ------ | ---- | ---- | ----- | ----- | ----- |
@@ -171,11 +164,10 @@ Try at least `Sinus_500Hz`, `Music#1` and `Speech#1`._
 - The smoothest or most natural modulating signal, and the most striking one: …
 - Where the clicks of the square signal are most audible, and on which
   recordings: …
-- The effect of a smaller depth (e.g. 50 %): …
 
 ## Conclusions
 
-**1. Level (Tables 2, 3).** Multiplying by $m \le 1$ always makes the sound
+**1. Level (Table 2).** Multiplying by $m \le 1$ always makes the sound
 quieter. On average the loss is $10 \log_{10} E[m^2]$: −4.26 dB for the sine,
 −4.77 dB for the triangle and −3.01 dB for the square. The square loses least
 because it spends half of every period at full level.
@@ -186,7 +178,6 @@ because it spends half of every period at full level.
 - The two shortest recordings cover only 2–3 periods at 2 Hz: `Multitone`
   (1.35 s) and `Pink_noise` (1.04 s). Their own level variations and the
   incomplete last period therefore shift the result by up to 0.5 dB.
-- At 50 % depth every modulating signal costs about 2 dB.
 
 **2. Smoothness and clicks (Table 1).**
 
@@ -212,7 +203,7 @@ The square therefore spreads the most energy away from the original
 components. The faster the rate, the further from $f_0$ that energy
 lands.
 
-**4. Uneven recordings depend on the phase (Tables 2, 4).**
+**4. Uneven recordings depend on the phase (Tables 2, 3).**
 
 - For speech and music the level change depends on where the loud parts fall
   within the period of $m$. With the square signal, `Speech#1` loses only
@@ -223,7 +214,7 @@ lands.
   $m$, so it loses less than expected (3.33 dB with the sine instead of
   4.26 dB).
 - The deviations shrink as the rate grows, because each sound then spans
-  more periods of $m$. From 20 Hz on, every recording in Table 4 is within
+  more periods of $m$. From 20 Hz on, every recording in Table 3 is within
   0.25 dB of the expected value. `DTMF_tones`, whose tones are short, is
   within 0.02 dB from 5 Hz on with the sine.
 - `Music#1` and `Music#2` (the same music at 48 and 96 kHz) give identical
