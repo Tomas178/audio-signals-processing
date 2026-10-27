@@ -36,14 +36,12 @@ _FORMULAS = {
     Waveform.SINE: "½(1 + cos 2πφ)",
     Waveform.TRIANGLE: "\\|1 − 2φ\\|",
     Waveform.SQUARE: "1 if φ < ½, else 0",
-    Waveform.SAWTOOTH: "1 − φ",
 }
 # Fourier series of u: the sidebands a tone f0 gets at f0 ± n·f_m.
 _SIDEBANDS = {
     Waveform.SINE: "n = 1 only",
     Waveform.TRIANGLE: "odd n, ∝ 1/n²",
     Waveform.SQUARE: "odd n, ∝ 1/n",
-    Waveform.SAWTOOTH: "every n, ∝ 1/n",
 }
 
 

@@ -17,7 +17,6 @@ class Waveform(Enum):
     SINE = ("Sine", 3 / 8)
     TRIANGLE = ("Triangle", 1 / 3)
     SQUARE = ("Square", 1 / 2)
-    SAWTOOTH = ("Sawtooth (ramp down)", 1 / 3)
 
     def __init__(self, label: str, mean_square: float) -> None:
         self.label = label
@@ -25,15 +24,13 @@ class Waveform(Enum):
 
 
 def shape(phase: np.ndarray, waveform: Waveform) -> np.ndarray:
-    """Unipolar wave u in [0, 1] of a phase in periods (one period per unit),
-    starting at full level: u(0) = 1."""
     if waveform is Waveform.SINE:
         return 0.5 * (1.0 + np.cos(2 * np.pi * phase))
+
     if waveform is Waveform.TRIANGLE:
         return np.abs(1.0 - 2.0 * phase)
-    if waveform is Waveform.SQUARE:
-        return np.where(phase < 0.5, 1.0, 0.0)
-    return 1.0 - phase
+
+    return np.where(phase < 0.5, 1.0, 0.0)
 
 
 def modulator(
@@ -61,17 +58,17 @@ def modulate(signal: AudioSignal, m: np.ndarray) -> AudioSignal:
     return signal.with_amplitude(amplitude * gain)
 
 
-def rms(x: np.ndarray) -> float:
+def root_mean_square(x: np.ndarray) -> float:
     return math.sqrt(float(np.mean(np.square(x, dtype=np.float64)))) if x.size else 0.0
 
 
 def level_change_db(original: np.ndarray, processed: np.ndarray) -> float:
     """RMS level of ``processed`` relative to ``original``, in dB."""
-    reference = rms(original)
+    reference = root_mean_square(original)
     if reference == 0:
         return float("nan")
 
-    ratio = rms(processed) / reference
+    ratio = root_mean_square(processed) / reference
     return 20 * math.log10(ratio) if ratio > 0 else float("-inf")
 
 

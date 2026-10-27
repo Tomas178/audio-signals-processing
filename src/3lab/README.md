@@ -8,9 +8,8 @@ $$
 \tilde{s}[k] = m[k] \cdot s[k] ,
 $$
 
-where $m$ is a low-frequency modulating signal. Four modulating signals are
-available (sine, triangle, square and sawtooth), with an adjustable rate and
-depth. The tool plots the original signal, $m(t)$ and the processed signal,
+where $m$ is a low-frequency modulating signal. Three modulating signals are
+available (sine, triangle and square), with an adjustable rate and depth. The tool plots the original signal, $m(t)$ and the processed signal,
 plays both, and saves the result in the source's format.
 
 ## Running
@@ -30,7 +29,7 @@ lab 2's `make signals2` adds three generated signals in `data/Generated/`.
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `main.py`                                  | Entry point.                                                                                                                                                      |
 | **`effects/`**                             | **The effect (numpy only, no Qt)**                                                                                                                                |
-| `effects/modulation.py`                    | `Waveform` (sine, triangle, square, sawtooth), `modulator()` → m[k], `modulate()` → m · s on every channel, measured and expected level change.                   |
+| `effects/modulation.py`                    | `Waveform` (sine, triangle, square), `modulator()` → m[k], `modulate()` → m · s on every channel, measured and expected level change.                             |
 | **`audio/`**                               | **Signal model + WAV I/O (from labs 1 and 2)**                                                                                                                    |
 | `audio/audio_signal.py`                    | `AudioSignal`: samples + metadata, real amplitude, channel names, `channel_samples()`. New: `with_amplitude()` stores processed values at the source's bit depth. |
 | `audio/subtype.py`                         | `Subtype` enum of the WAV encodings the tool reads.                                                                                                               |
@@ -55,12 +54,11 @@ resolve because `src/3lab` is on `sys.path`.
   sample index, so $m$ runs without a break over the whole recording. A
   unipolar shape $u(\varphi) \in [0, 1]$ starts at full level, $u(0) = 1$:
 
-  | Modulating signal    | $u(\varphi)$                                       |
-  | -------------------- | -------------------------------------------------- |
-  | Sine                 | $\tfrac12 (1 + \cos 2\pi\varphi)$                  |
-  | Triangle             | $\lvert 1 - 2\varphi \rvert$                       |
-  | Square               | $1$ for $\varphi < \tfrac12$, otherwise $0$        |
-  | Sawtooth (ramp down) | $1 - \varphi$: an instant rise, then a linear fade |
+  | Modulating signal | $u(\varphi)$                                |
+  | ----------------- | ------------------------------------------- |
+  | Sine              | $\tfrac12 (1 + \cos 2\pi\varphi)$           |
+  | Triangle          | $\lvert 1 - 2\varphi \rvert$                |
+  | Square            | $1$ for $\varphi < \tfrac12$, otherwise $0$ |
 
 - **Depth.** $m = 1 - d \, (1 - u)$, so $m$ swings between $1 - d$ and $1$. At
   the default $d = 100\,\%$ the level goes from silence to full volume, as the
@@ -95,7 +93,7 @@ resolve because `src/3lab` is on `sys.path`.
    `QFileDialog.getOpenFileName` filtered to `*.wav`. The top plot shows the
    original signal, and **Play original** plays it.
 2. **(c) Modulation effect.** The settings row below the plots chooses the
-   modulating signal (sine, triangle, square or sawtooth), its rate and its
+   modulating signal (sine, triangle or square), its rate and its
    depth. The window shows time diagrams of the original signal, the
    intermediate signal $m(t)$ and the processed signal, with the envelope
    $\pm\,\text{peak} \cdot m(t)$ drawn over the last one. The three plots zoom
@@ -112,41 +110,39 @@ recording.
 
 #### Table 1. Modulating signals (100 % depth; step at 2 Hz, 44.1 kHz)
 
-| Modulating signal    |        u(φ)        | E[m²] | Level change | Largest step of m per sample | Sidebands at f₀ ± n·f_m |
-| -------------------- | :----------------: | :---: | :----------: | :--------------------------: | :---------------------: |
-| Sine                 |   ½(1 + cos 2πφ)   | 0.375 |   -4.26 dB   |           0.00014            |        n = 1 only       |
-| Triangle             |     \|1 − 2φ\|     | 0.333 |   -4.77 dB   |           9.1e-05            |      odd n, ∝ 1/n²      |
-| Square               | 1 if φ < ½, else 0 | 0.500 |   -3.01 dB   |              1               |       odd n, ∝ 1/n      |
-| Sawtooth (ramp down) |       1 − φ        | 0.333 |   -4.77 dB   |              1               |      every n, ∝ 1/n     |
+| Modulating signal |        u(φ)        | E[m²] | Level change | Largest step of m per sample | Sidebands at f₀ ± n·f_m |
+| ----------------- | :----------------: | :---: | :----------: | :--------------------------: | :---------------------: |
+| Sine              |   ½(1 + cos 2πφ)   | 0.375 |   -4.26 dB   |           0.00014            |        n = 1 only       |
+| Triangle          |     \|1 − 2φ\|     | 0.333 |   -4.77 dB   |           9.1e-05            |      odd n, ∝ 1/n²      |
+| Square            | 1 if φ < ½, else 0 | 0.500 |   -3.01 dB   |              1               |       odd n, ∝ 1/n      |
 
 #### Table 2. Measured RMS level change, dB (2 Hz, 100 % depth)
 
-| Signal               | Channels |  Sine | Triangle | Square | Sawtooth |
-| -------------------- | :------: | :---: | :------: | :----: | :------: |
-| **Expected**         |          | -4.26 |  -4.77   | -3.01  |  -4.77   |
-| Brown_noise          |    1     | -4.23 |  -4.73   | -2.97  |  -4.71   |
-| DTMF_tones           |    1     | -4.31 |  -4.80   | -2.80  |  -4.60   |
-| Multitone            |    2     | -4.57 |  -5.05   | -2.55  |  -4.35   |
-| Music#1              |    2     | -3.33 |  -3.98   | -2.62  |  -4.02   |
-| Music#2              |    2     | -3.33 |  -3.98   | -2.62  |  -4.02   |
-| Pink_noise           |    1     | -3.81 |  -4.29   | -3.05  |  -4.58   |
-| Pure_tones           |    1     | -4.26 |  -4.77   | -3.01  |  -4.77   |
-| Sinus_125Hz          |    1     | -4.26 |  -4.77   | -3.01  |  -4.77   |
-| Sinus_500Hz          |    1     | -4.26 |  -4.77   | -3.01  |  -4.77   |
-| Speech#1             |    6     | -5.55 |  -5.91   | -9.29  |  -8.06   |
-| Speech#2             |    8     | -5.82 |  -6.12   | -9.76  |  -8.19   |
-| Square_440Hz         |    1     | -4.26 |  -4.77   | -3.01  |  -4.77   |
-| White_noise_gaussian |    1     | -4.25 |  -4.76   | -3.01  |  -4.76   |
-| White_noise_uniform  |    1     | -4.27 |  -4.78   | -2.99  |  -4.76   |
+| Signal               | Channels |  Sine | Triangle | Square |
+| -------------------- | :------: | :---: | :------: | :----: |
+| **Expected**         |          | -4.26 |  -4.77   | -3.01  |
+| Brown_noise          |    1     | -4.23 |  -4.73   | -2.97  |
+| DTMF_tones           |    1     | -4.31 |  -4.80   | -2.80  |
+| Multitone            |    2     | -4.57 |  -5.05   | -2.55  |
+| Music#1              |    2     | -3.33 |  -3.98   | -2.62  |
+| Music#2              |    2     | -3.33 |  -3.98   | -2.62  |
+| Pink_noise           |    1     | -3.81 |  -4.29   | -3.05  |
+| Pure_tones           |    1     | -4.26 |  -4.77   | -3.01  |
+| Sinus_125Hz          |    1     | -4.26 |  -4.77   | -3.01  |
+| Sinus_500Hz          |    1     | -4.26 |  -4.77   | -3.01  |
+| Speech#1             |    6     | -5.55 |  -5.91   | -9.29  |
+| Speech#2             |    8     | -5.82 |  -6.12   | -9.76  |
+| Square_440Hz         |    1     | -4.26 |  -4.77   | -3.01  |
+| White_noise_gaussian |    1     | -4.25 |  -4.76   | -3.01  |
+| White_noise_uniform  |    1     | -4.27 |  -4.78   | -2.99  |
 
 #### Table 3. Expected level change, dB, by depth
 
-| Modulating signal    |  25%  |  50%  |  75%  |  100% |
-| -------------------- | :---: | :---: | :---: | :---: |
-| Sine                 | -1.12 | -2.26 | -3.36 | -4.26 |
-| Triangle             | -1.13 | -2.34 | -3.59 | -4.77 |
-| Square               | -1.07 | -2.04 | -2.75 | -3.01 |
-| Sawtooth (ramp down) | -1.13 | -2.34 | -3.59 | -4.77 |
+| Modulating signal |  25%  |  50%  |  75%  |  100% |
+| ----------------- | :---: | :---: | :---: | :---: |
+| Sine              | -1.12 | -2.26 | -3.36 | -4.26 |
+| Triangle          | -1.13 | -2.34 | -3.59 | -4.77 |
+| Square            | -1.07 | -2.04 | -2.75 | -3.01 |
 
 #### Table 4. Measured RMS level change, dB, by rate (100 % depth)
 
@@ -169,21 +165,20 @@ Try at least `Sinus_500Hz`, `Music#1` and `Speech#1`._
 | Sine              |        |      |      |       |       |       |
 | Triangle          |        |      |      |       |       |       |
 | Square            |        |      |      |       |       |       |
-| Sawtooth          |        |      |      |       |       |       |
 
 - The rate at which the "waving" stops sounding like level movement and turns
   into roughness or a buzz: …
 - The smoothest or most natural modulating signal, and the most striking one: …
-- Where the clicks of the square and sawtooth signals are most audible, and on
-  which recordings: …
+- Where the clicks of the square signal are most audible, and on which
+  recordings: …
 - The effect of a smaller depth (e.g. 50 %): …
 
 ## Conclusions
 
 **1. Level (Tables 2, 3).** Multiplying by $m \le 1$ always makes the sound
 quieter. On average the loss is $10 \log_{10} E[m^2]$: −4.26 dB for the sine,
-−4.77 dB for the triangle and sawtooth, and −3.01 dB for the square. The square
-loses least because it spends half of every period at full level.
+−4.77 dB for the triangle and −3.01 dB for the square. The square loses least
+because it spends half of every period at full level.
 
 - Recordings whose loudness is constant and that last many periods match
   theory to within 0.02 dB. These are the sines, `Square_440Hz`, `Pure_tones`
@@ -198,12 +193,11 @@ loses least because it spends half of every period at full level.
 - At 2 Hz and 44.1 kHz, the sine and triangle change $m$ by at most
   1.4·10⁻⁴ and 9.1·10⁻⁵ of full scale per sample. The gain therefore moves
   smoothly.
-- The square and sawtooth jump between silence and full level from one sample
-  to the next (step 1). This makes the processed waveform discontinuous, unless
-  the signal happens to be near zero at that moment, and such a discontinuity
-  is heard as a click.
-- The square has two such jumps per period (cut and restart), and the sawtooth
-  has one (the restart).
+- The square jumps between silence and full level from one sample to the
+  next (step 1). This makes the processed waveform discontinuous, unless the
+  signal happens to be near zero at that moment, and such a discontinuity is
+  heard as a click.
+- The square has two such jumps per period (cut and restart).
 
 **3. Spectrum (Table 1).** Multiplying by $m$ is amplitude modulation. A tone
 $f_0$ is replaced by the tone plus sidebands at $f_0 \pm n f_m$, weighted by
@@ -212,11 +206,10 @@ the Fourier coefficients of $u$:
 - the sine adds only $f_0 \pm f_m$;
 - the triangle adds odd $n$, falling as $1/n^2$, so it is spectrally almost
   as clean as the sine;
-- the square adds odd $n$, falling only as $1/n$;
-- the sawtooth adds every $n$, falling as $1/n$.
+- the square adds odd $n$, falling only as $1/n$.
 
-The square and sawtooth therefore spread the most energy away from the
-original components. The faster the rate, the further from $f_0$ that energy
+The square therefore spreads the most energy away from the original
+components. The faster the rate, the further from $f_0$ that energy
 lands.
 
 **4. Uneven recordings depend on the phase (Tables 2, 4).**
@@ -225,10 +218,10 @@ lands.
   within the period of $m$. With the square signal, `Speech#1` loses only
   0.29 dB at 1 Hz, because its words fall in the "on" halves, but 9.29 dB at
   2 Hz, where they fall in the "off" halves.
-- At slow rates, a square or sawtooth signal can therefore keep or mute whole
-  words. At 2 Hz the loud moments of `Music#1` happen to coincide with high
-  values of $m$, so it loses less than expected (3.33 dB with the sine instead
-  of 4.26 dB).
+- At slow rates, the square signal can therefore keep or mute whole words. At
+  2 Hz the loud moments of `Music#1` happen to coincide with high values of
+  $m$, so it loses less than expected (3.33 dB with the sine instead of
+  4.26 dB).
 - The deviations shrink as the rate grows, because each sound then spans
   more periods of $m$. From 20 Hz on, every recording in Table 4 is within
   0.25 dB of the expected value. `DTMF_tones`, whose tones are short, is
@@ -236,15 +229,13 @@ lands.
 - `Music#1` and `Music#2` (the same music at 48 and 96 kHz) give identical
   numbers. The effect does not depend on the sample rate.
 
-**Summary.** All four modulating signals produce the required waving between
+**Summary.** All three modulating signals produce the required waving between
 silence and full volume.
 
 - The sine and triangle do it smoothly. The triangle's linear ramps spend
   less time near full level, so it loses 0.5 dB more.
 - The square cuts the sound on and off. It keeps the most level but clicks
   twice per period.
-- The sawtooth rises instantly and fades linearly (a pulsing shape), with one
-  click per period.
 - What the effect does to a recording depends on the rate relative to the
   length of its sounds. At slow rates $m$ can keep or mute whole words; at
   fast rates every sound spans many periods and is modulated evenly.
