@@ -18,7 +18,6 @@ plays both, and saves the result in the source's format.
 ```bash
 make setup      # uv sync (installs numpy, soundfile, PyQt6, pyqtgraph)
 make run3       # launch the GUI  (uv run python src/3lab/main.py)
-make test3      # headless self-test: shapes, plain loop, saving, all files, GUI offscreen
 make report3    # print the result tables of this README (Markdown)
 ```
 
@@ -43,7 +42,6 @@ lab 2's `make signals2` adds three generated signals in `data/Generated/`.
 | **`utils/`**                               | **Small pure helpers (from lab 1)**                                                                                                                               |
 | `utils/time_unit.py`, `utils/timescale.py` | Adaptive time-axis unit and duration formatting.                                                                                                                  |
 | **`scripts/`**                             | **Runnable dev tools (not imported by the app)**                                                                                                                  |
-| `scripts/selftest.py`                      | Headless verification (`make test3`).                                                                                                                             |
 | `scripts/report.py`                        | The result tables below (`make report3`).                                                                                                                         |
 
 As in labs 1 and 2, `ui` and `scripts` import from `effects`, `audio` and
@@ -89,8 +87,7 @@ resolve because `src/3lab` is on `sys.path`.
   the effect is a per-sample multiplication. numpy only does the array
   arithmetic, and no DSP library is used. `soundfile` only reads and writes
   the files, Qt Multimedia only plays them, and PyQt6 and pyqtgraph build the
-  interface and the plots. The self-test checks that the vectorised code
-  gives the same result as a plain per-sample Python loop.
+  interface and the plots.
 
 ## How the task items are met
 

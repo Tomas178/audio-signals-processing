@@ -12,11 +12,26 @@ _CHANNEL_LAYOUTS = {
     8: ["FL", "FR", "C", "LFE", "BL", "BR", "SL", "SR"],
 }
 
-# WAVE_FORMAT_EXTENSIBLE speaker bits; channels appear in the file in bit order.
 _SPEAKER_BITS = [
-    "FL", "FR", "C", "LFE", "BL", "BR", "FLC", "FRC", "BC",
-    "SL", "SR", "TC", "TFL", "TFC", "TFR", "TBL", "TBC", "TBR",
-]  # fmt: skip
+    "FL",
+    "FR",
+    "C",
+    "LFE",
+    "BL",
+    "BR",
+    "FLC",
+    "FRC",
+    "BC",
+    "SL",
+    "SR",
+    "TC",
+    "TFL",
+    "TFC",
+    "TFR",
+    "TBL",
+    "TBC",
+    "TBR",
+]
 
 
 @dataclass
@@ -51,6 +66,7 @@ class AudioSignal:
     def amplitude_label(self) -> str:
         if self.is_float:
             return f"Amplitude (IEEE float, {self.bits_per_sample}-bit)"
+
         return f"Amplitude ({self.valid_bits}-bit PCM)"
 
     @property
@@ -63,22 +79,24 @@ class AudioSignal:
                 if self.channel_mask >> bit & 1
             ][:n]
             return names + [f"Ch {i + 1}" for i in range(len(names), n)]
+
         if n in _CHANNEL_LAYOUTS:
             return list(_CHANNEL_LAYOUTS[n])
+
         return [f"Ch {i + 1}" for i in range(n)]
 
     @property
     def _container_shift(self) -> int:
-        """Bits libsndfile left-justifies integer samples by (8-bit into
-        int16, 24-bit into int32)."""
         return self.samples.dtype.itemsize * 8 - self.valid_bits
 
     def real_amplitude(self) -> np.ndarray:
         if self.is_float:
             return self.samples
+
         shift = self._container_shift
         if shift > 0:
             return self.samples >> shift
+
         return self.samples
 
     def with_amplitude(self, amplitude: np.ndarray) -> AudioSignal:
@@ -89,6 +107,7 @@ class AudioSignal:
         dtype = self.samples.dtype
         if self.is_float:
             return replace(self, samples=amplitude.astype(dtype))
+
         lo, hi = self.amplitude_range
         levels = np.rint(amplitude)
         np.clip(levels, lo, hi, out=levels)
@@ -96,6 +115,7 @@ class AudioSignal:
         shift = self._container_shift
         if shift > 0:
             samples <<= shift
+
         return replace(self, samples=samples)
 
     def channel_samples(self, channel: int | None = None) -> np.ndarray:

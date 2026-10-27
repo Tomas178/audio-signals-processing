@@ -9,7 +9,7 @@ from audio.audio_signal import AudioSignal
 
 DEFAULT_RATE_HZ = 2.0
 RATE_RANGE_HZ = (0.1, 50.0)
-DEFAULT_DEPTH = 100  # percent
+DEFAULT_DEPTH = 100
 DEPTH_RANGE = (0, 100)
 
 
@@ -33,7 +33,7 @@ def shape(phase: np.ndarray, waveform: Waveform) -> np.ndarray:
         return np.abs(1.0 - 2.0 * phase)
     if waveform is Waveform.SQUARE:
         return np.where(phase < 0.5, 1.0, 0.0)
-    return 1.0 - phase  # sawtooth: instant attack, linear decay
+    return 1.0 - phase
 
 
 def modulator(
@@ -70,6 +70,7 @@ def level_change_db(original: np.ndarray, processed: np.ndarray) -> float:
     reference = rms(original)
     if reference == 0:
         return float("nan")
+
     ratio = rms(processed) / reference
     return 20 * math.log10(ratio) if ratio > 0 else float("-inf")
 
