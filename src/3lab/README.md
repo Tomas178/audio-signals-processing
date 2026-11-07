@@ -30,7 +30,7 @@ lab 2's `make signals2` adds three generated signals in `data/Generated/`.
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `main.py`                                  | Entry point.                                                                                                                                                      |
 | **`effects/`**                             | **The effect (numpy only, no Qt)**                                                                                                                                |
-| `effects/modulation.py`                    | `Waveform` (sine, triangle, square), `modulator()` → m[k], `modulate()` → m · s on every channel, measured and expected level change.                             |
+| `effects/modulation.py`                    | `Waveform` (sine, triangle, square), `modulator()` → m[k], `modulate()` → m · s on every channel, measured level change.                                          |
 | **`audio/`**                               | **Signal model + WAV I/O (from labs 1 and 2)**                                                                                                                    |
 | `audio/audio_signal.py`                    | `AudioSignal`: samples + metadata, real amplitude, channel names, `channel_samples()`. New: `with_amplitude()` stores processed values at the source's bit depth. |
 | `audio/subtype.py`                         | `Subtype` enum of the WAV encodings the tool reads.                                                                                                               |
@@ -77,7 +77,7 @@ resolve because `src/3lab` is on `sys.path`.
   multiplied by $E[m^2]$, the mean of $u^2$ over one period: 3/8 for the
   sine, 1/3 for the triangle and 1/2 for the square. The level therefore
   changes by $10 \log_{10} E[m^2]$ dB. The info bar shows the measured RMS
-  change of the plotted signal next to this value.
+  change of the plotted signal.
 - **Playback.** Qt Multimedia (`QMediaPlayer`) plays the source file directly
   and the processed signal from a temporary WAV. It downmixes 5.1 and 7.1
   files and resamples for the output device.
@@ -110,17 +110,16 @@ recording.
 
 #### Table 1. Modulating signals (step at 2 Hz, 44.1 kHz)
 
-| Modulating signal |        u(φ)        | E[m²] | Level change | Largest step of m per sample | Sidebands at f₀ ± n·f_m |
-| ----------------- | :----------------: | :---: | :----------: | :--------------------------: | :---------------------: |
-| Sine              |   ½(1 + cos 2πφ)   | 0.375 |   -4.26 dB   |           0.00014            |        n = 1 only       |
-| Triangle          |     \|1 − 2φ\|     | 0.333 |   -4.77 dB   |           9.1e-05            |      odd n, ∝ 1/n²      |
-| Square            | 1 if φ < ½, else 0 | 0.500 |   -3.01 dB   |              1               |       odd n, ∝ 1/n      |
+| Modulating signal |        u(φ)        | E[m²] | Largest step of m per sample | Sidebands at f₀ ± n·f_m |
+| ----------------- | :----------------: | :---: | :--------------------------: | :---------------------: |
+| Sine              |   ½(1 + cos 2πφ)   | 0.375 |           0.00014            |        n = 1 only       |
+| Triangle          |     \|1 − 2φ\|     | 0.333 |           9.1e-05            |      odd n, ∝ 1/n²      |
+| Square            | 1 if φ < ½, else 0 | 0.500 |              1               |       odd n, ∝ 1/n      |
 
 #### Table 2. Measured RMS level change, dB (2 Hz)
 
 | Signal               | Channels |  Sine | Triangle | Square |
 | -------------------- | :------: | :---: | :------: | :----: |
-| **Expected**         |          | -4.26 |  -4.77   | -3.01  |
 | Brown_noise          |    1     | -4.23 |  -4.73   | -2.97  |
 | DTMF_tones           |    1     | -4.31 |  -4.80   | -2.80  |
 | Multitone            |    2     | -4.57 |  -5.05   | -2.55  |

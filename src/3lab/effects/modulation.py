@@ -37,21 +37,14 @@ def modulator(
     waveform: Waveform,
     rate_hz: float,
 ) -> np.ndarray:
-    """m[k] = u(k * rate / fs mod 1) for k = 0 .. n - 1.
-
-    m swings between 0 and 1, so the level goes from silence to full volume.
-    The phase is taken from the absolute sample index, so m is continuous over
-    the whole recording.
-    """
     phase = np.arange(n) * (rate_hz / sample_rate) % 1.0
     return shape(phase, waveform)
 
 
 def modulate(signal: AudioSignal, m: np.ndarray) -> AudioSignal:
-    """s~ = m * s: every channel is multiplied by the same m(t), on the real
-    amplitude scale, and rounded back to the source's quantization levels."""
     amplitude = signal.real_amplitude()
     gain = m[:, None] if amplitude.ndim > 1 else m
+
     return signal.with_amplitude(amplitude * gain)
 
 
@@ -67,8 +60,3 @@ def level_change_db(original: np.ndarray, processed: np.ndarray) -> float:
 
     ratio = root_mean_square(processed) / reference
     return 20 * math.log10(ratio) if ratio > 0 else float("-inf")
-
-
-def expected_level_db(waveform: Waveform) -> float:
-    """Level change for a signal that does not depend on m: 10 log10 E[m^2]."""
-    return 10 * math.log10(waveform.mean_square)

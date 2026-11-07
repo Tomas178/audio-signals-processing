@@ -19,7 +19,6 @@ import numpy as np
 from audio.wav_io import read_signal
 from effects.modulation import (
     Waveform,
-    expected_level_db,
     level_change_db,
     modulate,
     modulator,
@@ -85,7 +84,6 @@ def main() -> None:
             "Modulating signal",
             "u(φ)",
             "E[m²]",
-            "Level change",
             "Largest step of m per sample",
             "Sidebands at f₀ ± n·f_m",
         ],
@@ -94,7 +92,6 @@ def main() -> None:
                 w.label,
                 _FORMULAS[w],
                 f"{w.mean_square:.3f}",
-                f"{expected_level_db(w):+.2f} dB",
                 f"{_largest_step(w):.2g}",
                 _SIDEBANDS[w],
             ]
@@ -102,7 +99,7 @@ def main() -> None:
         ],
     )
 
-    rows = [["**Expected**", "", *(f"{expected_level_db(w):+.2f}" for w in Waveform)]]
+    rows = []
     for path in sorted(DATA_DIR.rglob("*.wav")):
         signal = read_signal(path)
         original = signal.real_amplitude()

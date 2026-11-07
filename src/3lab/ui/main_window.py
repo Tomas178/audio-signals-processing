@@ -12,7 +12,6 @@ from effects.modulation import (
     DEFAULT_RATE_HZ,
     RATE_RANGE_HZ,
     Waveform,
-    expected_level_db,
     level_change_db,
     modulate,
     modulator,
@@ -178,8 +177,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _update_info(self, original: np.ndarray, processed: np.ndarray) -> None:
         signal = self._signal
-        waveform = self._waveform.currentData()
-        expected = expected_level_db(waveform)
         self._info.setText(
             f"<b>{signal.path.name}</b> &nbsp;|&nbsp; "
             f"Channels: {signal.n_channels} &nbsp;|&nbsp; "
@@ -190,8 +187,7 @@ class MainWindow(QtWidgets.QMainWindow):
             f"<b>m(t)</b>: {self._effect_label()} "
             f"{self._period.text()} &nbsp;|&nbsp; "
             f"<b>RMS level change {_db(level_change_db(original, processed))}</b>"
-            f" ({self._channel_label()}; {_db(expected)} expected for a signal "
-            "independent of m)"
+            f" ({self._channel_label()})"
         )
 
     def play_original(self) -> None:
