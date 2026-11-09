@@ -1,0 +1,46 @@
+1. Priemonė signalams ir analizės rezultatams grafiškai atvaizduoti
+   1. Sukurta darbalaukio programa (Python, PyQt6 + pyqtgraph). Ji paleidžiama komanda make run4.
+   2. Mygtukas „Open .wav…“ atveria failo pasirinkimo langą (*.wav). Nuskaitomi 8–32 bitų PCM ir float failai, nuo mono iki 7.1. Daugiakanaliai failai analizuojami kaip kanalų vidurkis.
+   3. Lange pateikiamos trys diagramos:
+      1. viso signalo laiko diagrama su oranžine atkarpa, kurią galima tempti pele;
+      2. pasirinktosios atkarpos laiko diagrama: x(n) mėlyna spalva, o lango funkcija padaugintas signalas x(n)·l(n) oranžine;
+      3. atkarpos spektro diagrama, kurioje yra abu variantai: amplitudės spektras |X| mėlyna spalva ir spektrinio tankio funkcija S raudona.
+   4. Valdymas:
+      1. lango funkcijos pasirinkimas;
+      2. atkarpos pradžia sekundėmis, keičiama 1 ms žingsniu;
+      3. atkarpos ilgis milisekundėmis.
+
+      Po kiekvieno pakeitimo spektras perskaičiuojamas iš karto. Būsenos juostoje rodomi f, |X| ir S ten, kur yra pelės žymeklis.
+   5. Atidarius failą, 30 ms atkarpa automatiškai padedama ant garsiausios signalo vietos.
+
+2. Pasirinktųjų atkarpų spektro analizė
+   1. Atkarpa yra N iš eilės einančių signalo reikšmių.
+   2. Atkarpa dauginama iš lango funkcijos l(n), kad jos kraštuose neliktų trūkio. Galima rinktis stačiakampį langą (be lango), Hanning, Hamming arba Blackman.
+   3. Trumpalaikis spektras skaičiuojamas pagal DFT formulę X(k) = Σ x(n)·l(n)·e^(−j2πnk/N), naudojant FFT. Rodomos reikšmės k = 0…N/2, t. y. dažniai nuo 0 iki fs/2.
+   4. Amplitudės spektras yra |X(k)|. Spektrinio tankio funkcija (periodograma) yra S(k) = X(k)·X*(k) = |X(k)|². Abu dalijami iš savo maksimumo (skalė 0–1), todėl telpa vienoje diagramoje.
+   5. Dažninė skyra Δf = fs/N = 1/T priklauso tik nuo atkarpos trukmės: 30 ms atkarpai ji lygi 33,3 Hz, 1 s atkarpai – 1 Hz.
+
+3. Dažninė sudėtis ir esminės dažninės savybės (garsiausia 100 ms atkarpa, Hanning langas)
+   1. Testiniai tonai (Sinus_500Hz, Pure_tones) turi vieną spektro liniją tono dažniu. Kitų komponenčių nėra, todėl didžiausias stebimas dažnis lygus tono dažniui.
+   2. Stačiakampis signalas (Square_440Hz) turi periodinę, harmoninę struktūrą:
+      1. yra tik nelyginės 440 Hz harmonikos: 440, 1320, 2200, 3080 ir 3960 Hz;
+      2. jų amplitudės mažėja kaip 1/n: 1; 0,33; 0,20; 0,14; 0,11;
+      3. dėl staigių frontų spektras siekia apie 21,7 kHz.
+   3. DTMF (telefono tonai) turi dvi linijas, kurios nėra viena kitos harmonikos: apie 697 ir 1336 Hz (skaitmuo „2“). Aukščiau 1,42 kHz komponenčių nėra, taigi tai siaurajuostis techninis signalas.
+   4. Žmogaus balsas (Speech) yra harmoninė eilė:
+      1. 150, 310 ir 460 Hz yra pagrindinis tonas f0 ≈ 150 Hz ir jo 2-oji bei 3-ioji harmonikos;
+      2. atstumas tarp linijų lygus balso aukščiui;
+      3. silpnesnės komponentės (formantės, šnypščiantieji garsai) siekia 3,3 kHz 1 % lygiu ir 8,1 kHz 0,1 % lygiu.
+   5. Muzikoje (Music) vyrauja žemi dažniai: 60 Hz, jo 2-oji harmonika 120 Hz ir 290 Hz. Virš 880 Hz visos komponentės silpnesnės nei 1 % maksimumo.
+   6. Multitone yra tankios linijų „šukos“ kas 10 Hz, 290–590 Hz ir 950–2780 Hz ruožuose. Atskiros linijos matomos tik 300 ms ir ilgesnėse atkarpose.
+   7. Triukšmai neturi vyraujančių dažnių, jų spektras tolydus:
+      1. baltojo triukšmo spektras lygus visame diapazone iki fs/2;
+      2. rožinis ir rudasis triukšmai stipriausi žemuose dažniuose;
+      3. jų spektrinis tankis krinta 10,4 ir 19,9 dB per dekadą, t. y. S ∝ 1/f ir S ∝ 1/f², kaip 29-oje skaidrėje.
+   8. Didžiausias stebimas dažnis priklauso nuo pasirinkto lygio:
+      1. kalbai jis lygus 3,3 kHz 1 % lygiu ir 8,1 kHz 0,1 % lygiu;
+      2. rudajam triukšmui – 470 Hz ir 6,7 kHz.
+   9. Apibendrinant pagal kilmę:
+      1. techniniai ir testiniai signalai yra kelios tikslios linijos;
+      2. balsas ir muzika yra harmoninės eilės: balso f0 kinta laike, o muzikoje vyrauja žemi dažniai;
+      3. triukšmai turi tolydų spektrą, kurį apibūdina jo nuolydis (0, −1 arba −2).
